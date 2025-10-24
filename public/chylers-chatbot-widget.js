@@ -118,12 +118,15 @@
 
         .chylers-header-text {
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
         }
 
-        .chylers-chat-header h3 {
-            margin: 0;
-            font-size: 16px;
-            margin-bottom: 3px;
+        .chylers-header-logo {
+            height: 28px;
+            width: auto;
+            display: block;
         }
 
         .chylers-chat-header p {
@@ -461,7 +464,7 @@
             <div class="chylers-chat-header">
                 <div class="chylers-chat-header-content">
                     <div class="chylers-header-text">
-                        <h3>Chylers</h3>
+                        <img src="https://chylers.com/cdn/shop/files/logo_R.jpg?v=1715295319&width=500" alt="Chylers" class="chylers-header-logo">
                         <p>Premium Hawaiian Beef Chips®</p>
                     </div>
                 </div>
