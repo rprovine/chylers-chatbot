@@ -7,8 +7,8 @@
  */
 
 (function() {
-    // Configuration
-    const API_BASE_URL = 'https://chylers.com'; // TODO: Update with actual Chylers API endpoint
+    // Configuration - use current origin for API calls
+    const API_BASE_URL = window.location.origin;
 
     // Prevent multiple initializations
     if (window.ChylersChatbotInitialized) {
