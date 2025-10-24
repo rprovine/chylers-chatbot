@@ -19,7 +19,6 @@
 
     // Session management
     let sessionId = `widget-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    let currentLanguageMode = 'english';
     let isOpen = false;
 
     // Create styles
@@ -386,38 +385,6 @@
             color: #075985;
         }
 
-        /* Language selector */
-        .chylers-language-selector {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            flex-shrink: 0;
-        }
-
-        .chylers-language-label {
-            font-size: 10px;
-            font-weight: 600;
-            opacity: 0.9;
-            white-space: nowrap;
-        }
-
-        .chylers-language-select {
-            padding: 4px 8px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            color: white;
-            font-size: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            outline: none;
-        }
-
-        .chylers-language-select option {
-            background: #0ea5e9;
-            color: white;
-        }
-
         /* Actions footer */
         .chylers-actions {
             display: flex;
@@ -497,14 +464,6 @@
                         <h3>Chylers</h3>
                         <p>Premium Hawaiian Beef Chips®</p>
                     </div>
-                    <div class="chylers-language-selector">
-                        <span class="chylers-language-label">Language:</span>
-                        <select class="chylers-language-select" id="chylers-language">
-                            <option value="english">English</option>
-                            <option value="pidgin">Pidgin</option>
-                            <option value="olelo">ʻŌlelo Hawaiʻi</option>
-                        </select>
-                    </div>
                 </div>
                 <button class="chylers-close-btn" aria-label="Close chat">×</button>
             </div>
@@ -564,7 +523,6 @@
     const sendButton = document.getElementById('chylers-send');
     const typingIndicator = document.getElementById('chylers-typing');
     const quickstart = document.getElementById('chylers-quickstart');
-    const languageSelect = document.getElementById('chylers-language');
     const clearButton = document.getElementById('chylers-clear');
 
     // Toggle chat
@@ -674,8 +632,7 @@
                 },
                 body: JSON.stringify({
                     message: text,
-                    sessionId: sessionId,
-                    languageMode: currentLanguageMode
+                    sessionId: sessionId
                 }),
             });
 
@@ -709,31 +666,6 @@
             const message = btn.dataset.message;
             sendMessage(message);
         });
-    });
-
-    // Language selector
-    languageSelect.addEventListener('change', (e) => {
-        currentLanguageMode = e.target.value;
-        console.log(`Language changed to: ${currentLanguageMode}`);
-
-        // Add a system message to indicate language change
-        const languageNames = {
-            'english': 'English',
-            'pidgin': 'Hawaiian Pidgin',
-            'olelo': 'ʻŌlelo Hawaiʻi'
-        };
-
-        const systemMessage = document.createElement('div');
-        systemMessage.style.textAlign = 'center';
-        systemMessage.style.padding = '10px';
-        systemMessage.style.color = '#6c757d';
-        systemMessage.style.fontSize = '12px';
-        systemMessage.style.fontStyle = 'italic';
-        systemMessage.textContent = `Language changed to ${languageNames[currentLanguageMode]}`;
-        messagesContainer.appendChild(systemMessage);
-
-        // Scroll to show the message
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
 
     // Clear chat
