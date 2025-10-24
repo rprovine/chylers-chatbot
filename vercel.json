@@ -36,8 +36,8 @@
       "dest": "/public/widget-demo.html"
     },
     {
-      "src": "/lenilani-chatbot-widget.js",
-      "dest": "/public/lenilani-chatbot-widget.js"
+      "src": "/chylers-chatbot-widget.js",
+      "dest": "/public/chylers-chatbot-widget.js"
     },
     {
       "src": "/(.*)",
