@@ -8,7 +8,7 @@ const cleanEnvVar = (value) => {
 
 const SHOPIFY_STORE_URL = cleanEnvVar(process.env.SHOPIFY_STORE_URL);
 const SHOPIFY_ACCESS_TOKEN = cleanEnvVar(process.env.SHOPIFY_ACCESS_TOKEN);
-const NEW_WIDGET_URL = 'https://chylers-chatbot-dpmy2eb4k-rprovines-projects.vercel.app/chylers-chatbot-widget.js';
+const NEW_WIDGET_URL = 'https://chylers-chatbot-2za7ombhs-rprovines-projects.vercel.app/chylers-chatbot-widget.js';
 
 const shopify = axios.create({
   baseURL: `https://${SHOPIFY_STORE_URL}/admin/api/2024-01`,
@@ -34,9 +34,15 @@ async function updateWidgetUrl() {
 
   // Find any existing widget URL
   const oldUrls = [
+    'https://chylers-chatbot-t3gfsfk90-rprovines-projects.vercel.app/chylers-chatbot-widget.js',
+    'https://chylers-chatbot-dfgpg9g7h-rprovines-projects.vercel.app/chylers-chatbot-widget.js',
+    'https://chylers-chatbot-aphahph7z-rprovines-projects.vercel.app/chylers-chatbot-widget.js',
+    'https://chylers-chatbot-dpmy2eb4k-rprovines-projects.vercel.app/chylers-chatbot-widget.js',
     'https://chylers-chatbot-qfe23gvds-rprovines-projects.vercel.app/chylers-chatbot-widget.js',
     'https://chylers-chatbot-mjsslr95r-rprovines-projects.vercel.app/chylers-chatbot-widget.js',
-    'https://chylers-chatbot-jf4tszvbc-rprovines-projects.vercel.app/chylers-chatbot-widget.js'
+    'https://chylers-chatbot-jf4tszvbc-rprovines-projects.vercel.app/chylers-chatbot-widget.js',
+    'https://chylers-chatbot-988rikiki-rprovines-projects.vercel.app/chylers-chatbot-widget.js',
+    'https://chylers-chatbot-gk1e0m7c6-rprovines-projects.vercel.app/chylers-chatbot-widget.js'
   ];
 
   let foundUrl = null;
