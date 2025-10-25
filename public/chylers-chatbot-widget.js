@@ -7,8 +7,8 @@
  */
 
 (function() {
-    // Configuration - use current origin for API calls
-    const API_BASE_URL = window.location.origin;
+    // Configuration - use Vercel deployment for API calls
+    const API_BASE_URL = 'https://chylers-chatbot-qfe23gvds-rprovines-projects.vercel.app';
 
     // Prevent multiple initializations
     if (window.ChylersChatbotInitialized) {
