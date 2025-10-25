@@ -352,6 +352,20 @@ app.get('/api/test', (req, res) => {
   });
 });
 
+// Helper function to detect order tracking intent
+function detectOrderTracking(message) {
+  const trackingKeywords = /\b(track|tracking|status|where is|check|find|locate)\b.*\b(order|package|shipment|delivery)\b|\border\b.*\b(status|track|tracking|number)\b/i;
+  return trackingKeywords.test(message);
+}
+
+// Helper function to extract order number from message
+function extractOrderNumber(message) {
+  // Look for patterns like IG0016038 or #IG0016038
+  const orderPattern = /#?([A-Z]{2}\d{7,})/i;
+  const match = message.match(orderPattern);
+  return match ? match[1].toUpperCase() : null;
+}
+
 // Main chat endpoint
 app.post('/chat', chatLimiter, async (req, res) => {
   try {
@@ -376,7 +390,55 @@ app.post('/chat', chatLimiter, async (req, res) => {
     const today = new Date().toISOString().split('T')[0];
     analyticsData.conversationsByDay[today] = (analyticsData.conversationsByDay[today] || 0) + 1;
 
-    // Get AI response
+    // 🎯 DETERMINISTIC ORDER TRACKING - No AI needed!
+    const isOrderTracking = detectOrderTracking(message);
+    const orderNumber = extractOrderNumber(message);
+
+    // Handle "cancel" to exit order tracking mode
+    if (context.awaitingOrderNumber && /^(cancel|nevermind|never mind|exit|quit|stop)$/i.test(message.trim())) {
+      context.awaitingOrderNumber = false;
+      return res.json({
+        message: "No problem! How else can I help you today?",
+        suggestions: generateQuickReplies(context.messageCount, message),
+        sessionId
+      });
+    }
+
+    // If we're in order tracking mode or user is asking about tracking
+    if (isOrderTracking || context.awaitingOrderNumber || orderNumber) {
+      if (orderNumber) {
+        // We have an order number - look it up directly!
+        console.log(`🎯 Direct order tracking: ${orderNumber}`);
+
+        try {
+          const orderResult = await trackOrder(orderNumber);
+          context.awaitingOrderNumber = false;
+
+          return res.json({
+            message: orderResult.message,
+            suggestions: ["Check another order", "View products", "Contact support"],
+            sessionId
+          });
+        } catch (trackError) {
+          console.error('Error tracking order:', trackError);
+          return res.json({
+            message: `I'm having trouble looking up order ${orderNumber} right now. Please contact customer service at 1-800-484-1663 or BeefChips@chylers.com for assistance.`,
+            suggestions: ["Try again", "Contact support"],
+            sessionId
+          });
+        }
+      } else if (isOrderTracking || context.awaitingOrderNumber) {
+        // User wants to track but hasn't provided order number yet
+        context.awaitingOrderNumber = true;
+        return res.json({
+          message: "I'd be happy to help you track your order! 📦\n\nWhat's your order number? (It looks like IG0016038)\n\nType 'cancel' if you'd like to do something else.",
+          suggestions: ["Cancel"],
+          sessionId
+        });
+      }
+    }
+
+    // Get AI response (only if not handling order tracking)
     const response = await conversationChain.invoke({
       input: message,
     });
