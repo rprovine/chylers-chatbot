@@ -101,21 +101,29 @@ Main chat endpoint - sends message to AI and returns response
 ```
 
 ### POST /api/track-order
-Shopify order status lookup
+Shopify order status lookup (also integrated into chat)
+
+**Note:** Order tracking is now automatically detected in the chat flow. When users ask about order status, the bot prompts for order number and looks it up directly.
 
 **Request:**
 ```json
 {
-  "orderNumber": "1234"
+  "orderNumber": "IG0016028"
 }
 ```
 
 **Response:**
 ```json
 {
-  "message": "Order #1234:\nStatus: Shipped\nPayment: paid\n\nTrack: https://..."
+  "message": "Order #IG0016028:\nStatus: Shipped\nPayment: paid\n\nTrack: https://..."
 }
 ```
+
+**Features:**
+- Deterministic detection (bypasses AI for instant response)
+- Only requires order number (email no longer needed)
+- Searches Shopify orders with and without # prefix
+- Graceful fallback if Shopify not configured
 
 ### POST /api/capture-lead
 Store customer contact information
@@ -216,6 +224,8 @@ Without Supabase, chatbot works but doesn't store data.
 ### Optional (Order Tracking)
 - `SHOPIFY_STORE_URL` - Your myshopify.com domain
 - `SHOPIFY_ACCESS_TOKEN` - Admin API access token
+
+**Note:** Environment variables are automatically cleaned to remove escape sequences, quotes, and newlines. This ensures compatibility with various deployment platforms.
 
 Without Shopify, order tracking gracefully falls back.
 
