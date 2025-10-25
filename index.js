@@ -380,18 +380,17 @@ app.post('/chat', chatLimiter, async (req, res) => {
 
     // Check for order tracking tag and replace with actual data
     let finalResponse = response.response;
-    const trackOrderPattern = /\[TRACK_ORDER:([^:]+):([^\]]+)\]/;
+    const trackOrderPattern = /\[TRACK_ORDER:([^\]]+)\]/;
     const trackOrderMatch = finalResponse.match(trackOrderPattern);
 
     if (trackOrderMatch) {
       const orderNumber = trackOrderMatch[1].trim();
-      const email = trackOrderMatch[2].trim();
 
-      console.log(`🔍 Order tracking requested: #${orderNumber} for ${email}`);
+      console.log(`🔍 Order tracking requested: #${orderNumber}`);
 
       try {
         // Call the track order function directly
-        const orderResult = await trackOrder(orderNumber, email);
+        const orderResult = await trackOrder(orderNumber);
 
         // Replace the tag with the actual order status
         finalResponse = finalResponse.replace(trackOrderPattern, orderResult.message);
@@ -484,10 +483,10 @@ app.get('/api/analytics', (req, res) => {
 });
 
 // Helper function to track orders (shared logic)
-async function trackOrder(orderNumber, email) {
+async function trackOrder(orderNumber) {
   try {
-    if (!orderNumber || !email) {
-      return { message: 'Both order number and email are required.' };
+    if (!orderNumber) {
+      return { message: 'Order number is required.' };
     }
 
     // Check if Shopify credentials are configured
@@ -509,14 +508,6 @@ async function trackOrder(orderNumber, email) {
 
     if (response.data.orders && response.data.orders.length > 0) {
       const order = response.data.orders[0];
-
-      // Validate email matches order
-      const orderEmail = order.email || order.customer?.email;
-      if (orderEmail && orderEmail.toLowerCase() !== email.toLowerCase()) {
-        return {
-          message: `The email address doesn't match our records for order #${orderNumber}. Please double-check the email or contact customer service at 1-800-484-1663 or BeefChips@chylers.com for help.`
-        };
-      }
 
       const fulfillmentStatus = order.fulfillment_status || 'unfulfilled';
       const financialStatus = order.financial_status || 'pending';
@@ -546,8 +537,8 @@ async function trackOrder(orderNumber, email) {
 // Order tracking endpoint
 app.post('/api/track-order', async (req, res) => {
   try {
-    const { orderNumber, email } = req.body;
-    const result = await trackOrder(orderNumber, email);
+    const { orderNumber } = req.body;
+    const result = await trackOrder(orderNumber);
     res.json(result);
   } catch (error) {
     console.error('Order tracking error:', error);
