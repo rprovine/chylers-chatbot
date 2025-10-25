@@ -14,6 +14,12 @@ const { ChatPromptTemplate, MessagesPlaceholder } = require('@langchain/core/pro
 
 dotenv.config();
 
+// Helper function to clean environment variables (remove escape sequences, quotes, newlines)
+const cleanEnvVar = (value) => {
+  if (!value) return value;
+  return value.replace(/\\n/g, '').replace(/^["']|["']$/g, '').trim();
+};
+
 // Load Chylers® knowledge base
 const KNOWLEDGE_BASE = fs.readFileSync(
   path.join(__dirname, 'chylers-knowledge-base.md'),
@@ -582,37 +588,70 @@ async function trackOrder(orderNumber) {
       };
     }
 
-    // Call Shopify API to get order details
-    const shopifyUrl = `https://${process.env.SHOPIFY_STORE_URL}/admin/api/2024-01/orders.json?name=${orderNumber}`;
+    // Clean environment variables to remove any escape sequences, quotes, or newlines
+    const SHOPIFY_STORE_URL = cleanEnvVar(process.env.SHOPIFY_STORE_URL);
+    const SHOPIFY_ACCESS_TOKEN = cleanEnvVar(process.env.SHOPIFY_ACCESS_TOKEN);
 
-    const response = await axios.get(shopifyUrl, {
-      headers: {
-        'X-Shopify-Access-Token': process.env.SHOPIFY_ACCESS_TOKEN
+    console.log(`📦 Looking up order: ${orderNumber}`);
+
+    // Try multiple search strategies for the order number
+    // 1. Try with # prefix (standard Shopify format)
+    // 2. Try without prefix (in case it's a custom order number)
+    const searchVariations = [
+      `#${orderNumber}`,  // With # prefix
+      orderNumber,         // Without prefix
+    ];
+
+    let order = null;
+
+    for (const searchTerm of searchVariations) {
+      console.log(`🔍 Searching Shopify for: ${searchTerm}`);
+
+      const shopifyUrl = `https://${SHOPIFY_STORE_URL}/admin/api/2024-01/orders.json?name=${encodeURIComponent(searchTerm)}&limit=1`;
+
+      const response = await axios.get(shopifyUrl, {
+        headers: {
+          'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN
+        }
+      });
+
+      console.log(`📊 Search for "${searchTerm}" returned ${response.data.orders?.length || 0} orders`);
+
+      if (response.data.orders && response.data.orders.length > 0) {
+        order = response.data.orders[0];
+        console.log(`✅ Found order: ${order.name} (${order.id})`);
+        break;
       }
-    });
+    }
 
-    if (response.data.orders && response.data.orders.length > 0) {
-      const order = response.data.orders[0];
-
+    if (order) {
       const fulfillmentStatus = order.fulfillment_status || 'unfulfilled';
       const financialStatus = order.financial_status || 'pending';
 
-      let statusMessage = `Order #${orderNumber}:\n`;
+      let statusMessage = `Order ${order.name}:\n`;
       statusMessage += `Status: ${fulfillmentStatus === 'fulfilled' ? 'Shipped' : 'Processing'}\n`;
       statusMessage += `Payment: ${financialStatus}\n`;
 
       if (order.tracking_url) {
         statusMessage += `\nTrack your shipment: ${order.tracking_url}`;
+      } else if (order.fulfillments && order.fulfillments.length > 0 && order.fulfillments[0].tracking_url) {
+        statusMessage += `\nTrack your shipment: ${order.fulfillments[0].tracking_url}`;
       }
 
       return { message: statusMessage };
     } else {
+      console.log(`❌ Order not found: ${orderNumber}`);
       return {
-        message: `I couldn't find order #${orderNumber}. Please double-check the order number or contact customer service at 1-800-484-1663 or BeefChips@chylers.com for help.`
+        message: `I couldn't find order ${orderNumber}. Please double-check the order number or contact customer service at 1-800-484-1663 or BeefChips@chylers.com for help.`
       };
     }
   } catch (error) {
-    console.error('Order tracking error:', error);
+    console.error('❌ Order tracking error - Full details:');
+    console.error('  Message:', error.message);
+    console.error('  Response status:', error.response?.status);
+    console.error('  Response data:', JSON.stringify(error.response?.data || {}, null, 2));
+    console.error('  Config URL:', error.config?.url);
+    console.error('  Stack:', error.stack);
     return {
       message: `I'm having trouble looking up that order. Please contact customer service at 1-800-484-1663 or BeefChips@chylers.com with your order number for assistance.`
     };
