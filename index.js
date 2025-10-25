@@ -354,8 +354,22 @@ app.get('/api/test', (req, res) => {
 
 // Helper function to detect order tracking intent
 function detectOrderTracking(message) {
-  const trackingKeywords = /\b(track|tracking|status|where is|check|find|locate)\b.*\b(order|package|shipment|delivery)\b|\border\b.*\b(status|track|tracking|number)\b/i;
-  return trackingKeywords.test(message);
+  const lowerMessage = message.toLowerCase();
+
+  // Simple keyword matching - much more reliable than complex regex
+  const hasOrderKeyword = lowerMessage.includes('order') ||
+                          lowerMessage.includes('package') ||
+                          lowerMessage.includes('shipment') ||
+                          lowerMessage.includes('delivery');
+
+  const hasTrackingKeyword = lowerMessage.includes('track') ||
+                             lowerMessage.includes('status') ||
+                             lowerMessage.includes('where') ||
+                             lowerMessage.includes('check') ||
+                             lowerMessage.includes('find') ||
+                             lowerMessage.includes('locate');
+
+  return hasOrderKeyword && hasTrackingKeyword;
 }
 
 // Helper function to extract order number from message
