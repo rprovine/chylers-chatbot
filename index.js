@@ -638,6 +638,15 @@ app.get('/api/conversations', async (req, res) => {
   }
 });
 
+// Analytics dashboard route
+app.get('/analytics', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'analytics.html'));
+});
+
+app.get('/analytics.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'analytics.html'));
+});
+
 // Root route - serve demo page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
