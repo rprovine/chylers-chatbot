@@ -35,10 +35,10 @@
             width: 60px;
             height: 60px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #0d7377 0%, #14919d 100%);
+            background: linear-gradient(135deg, #E22120 0%, #c41d1c 100%);
             border: none;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(13, 115, 119, 0.4);
+            box-shadow: 0 4px 12px rgba(226, 33, 32, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -49,7 +49,7 @@
 
         #chylers-chat-button:hover {
             transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(13, 115, 119, 0.5);
+            box-shadow: 0 6px 20px rgba(226, 33, 32, 0.5);
         }
 
         #chylers-chat-button.open {
@@ -263,12 +263,12 @@
         }
 
         .chylers-chat-input input:focus {
-            border-color: #0d7377;
+            border-color: #E22120;
         }
 
         .chylers-chat-input button {
             padding: 10px 18px;
-            background: linear-gradient(135deg, #0d7377 0%, #14919d 100%);
+            background: linear-gradient(135deg, #E22120 0%, #c41d1c 100%);
             color: white;
             border: none;
             border-radius: 20px;
@@ -294,8 +294,8 @@
         .chylers-suggestion-btn {
             padding: 8px 14px;
             background: white;
-            border: 2px solid #0d7377;
-            color: #0d7377;
+            border: 2px solid #E22120;
+            color: #E22120;
             border-radius: 20px;
             font-size: 12px;
             cursor: pointer;
@@ -306,10 +306,10 @@
         }
 
         .chylers-suggestion-btn:hover {
-            background: #0d7377;
+            background: #E22120;
             color: white;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(13, 115, 119, 0.3);
+            box-shadow: 0 4px 12px rgba(226, 33, 32, 0.3);
         }
 
         .chylers-quickstart {
@@ -348,8 +348,8 @@
         }
 
         .chylers-quickstart-btn:hover {
-            border-color: #0d7377;
-            background: #e6f7f7;
+            border-color: #E22120;
+            background: #ffe6e6;
             transform: translateY(-2px);
         }
 
@@ -366,11 +366,11 @@
 
         /* Social proof banner */
         .chylers-social-proof {
-            background: linear-gradient(135deg, #e6f7f7 0%, #d1f0f0 100%);
-            border-bottom: 1px solid #a8dede;
+            background: linear-gradient(135deg, #ffe6e6 0%, #ffd1d1 100%);
+            border-bottom: 1px solid #ffa8a8;
             padding: 8px 12px;
             font-size: 11px;
-            color: #0d7377;
+            color: #E22120;
             text-align: center;
             font-weight: 500;
         }
