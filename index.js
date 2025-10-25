@@ -394,8 +394,11 @@ app.post('/chat', chatLimiter, async (req, res) => {
     const isOrderTracking = detectOrderTracking(message);
     const orderNumber = extractOrderNumber(message);
 
+    console.log(`📊 Order tracking detection: isOrderTracking=${isOrderTracking}, orderNumber=${orderNumber}, awaitingOrderNumber=${context.awaitingOrderNumber}`);
+
     // Handle "cancel" to exit order tracking mode
     if (context.awaitingOrderNumber && /^(cancel|nevermind|never mind|exit|quit|stop)$/i.test(message.trim())) {
+      console.log('❌ User canceled order tracking');
       context.awaitingOrderNumber = false;
       return res.json({
         message: "No problem! How else can I help you today?",
@@ -406,6 +409,7 @@ app.post('/chat', chatLimiter, async (req, res) => {
 
     // If we're in order tracking mode or user is asking about tracking
     if (isOrderTracking || context.awaitingOrderNumber || orderNumber) {
+      console.log('🎯 Entering order tracking flow...');
       if (orderNumber) {
         // We have an order number - look it up directly!
         console.log(`🎯 Direct order tracking: ${orderNumber}`);
