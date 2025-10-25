@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 const dotenv = require('dotenv');
 const fs = require('fs');
 const path = require('path');
+const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
 const { ChatAnthropic } = require('@langchain/anthropic');
 const { ConversationChain } = require('langchain/chains');
@@ -13,7 +14,7 @@ const { ChatPromptTemplate, MessagesPlaceholder } = require('@langchain/core/pro
 
 dotenv.config();
 
-// Load Chylers knowledge base
+// Load Chylers® knowledge base
 const KNOWLEDGE_BASE = fs.readFileSync(
   path.join(__dirname, 'chylers-knowledge-base.md'),
   'utf-8'
@@ -46,12 +47,13 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
-// Security: Configure CORS for Chylers domain
+// Security: Configure CORS for Chylers® domain
 const allowedOrigins = process.env.NODE_ENV === 'production'
   ? [
       'https://www.chylers.com',
       'https://chylers.com',
-      'https://chylers.myshopify.com'
+      'https://chylers.myshopify.com',
+      'https://chat.chylers.com'
     ]
   : ['http://localhost:3000', 'http://127.0.0.1:3000'];
 
@@ -59,6 +61,11 @@ app.use(cors({
   origin: function(origin, callback) {
     // Allow requests with no origin (like mobile apps, curl, postman)
     if (!origin) return callback(null, true);
+
+    // Allow Vercel deployment URLs
+    if (origin && origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
 
     if (allowedOrigins.indexOf(origin) === -1) {
       return callback(new Error('CORS policy: Origin not allowed'), false);
@@ -107,138 +114,102 @@ function initializeChain() {
     memoryKey: 'history',
   });
 
-  const CHYLERS_SYSTEM_PROMPT = `You are Chylers' AI shopping assistant - a friendly, knowledgeable guide helping customers discover and purchase Hawaiian Beef Chips®.
+  const CHYLERS_SYSTEM_PROMPT = `You are Chylers®' AI shopping assistant - your mission is to help customers discover Hawaiian Beef Chips® and make it EASY for them to purchase.
 
-## 🎯 YOUR ROLE & MISSION
-You represent Chylers, a premium e-commerce snack brand specializing in Hawaiian Beef Chips® - wafer-thin strips of premium US beef with a unique chip-like crunch and authentic Hawaiian flavors.
+## 🎯 YOUR PRIMARY GOALS
 
-**Your Goals:**
-1. Help customers understand what makes Hawaiian Beef Chips® unique
-2. Guide customers in choosing the right flavors for them
-3. Answer questions about ingredients, texture, shipping, and subscriptions
-4. Direct customers to purchase at www.chylers.com
-5. Promote subscription service for regular customers
-6. Highlight free shipping on orders over $49
+1. **Guide customers to purchase** at www.chylers.com
+2. **Answer questions comprehensively** using the knowledge base below
+3. **Recommend the right products** based on customer preferences
+4. **Highlight value propositions**: unique texture, pricing, bulk savings, free shipping
+5. **Make buying easy**: provide clear paths to purchase
 
 **Communication Style:**
-- Keep responses SHORT and conversational (2-4 sentences)
-- Be enthusiastic about the product but not pushy
-- Focus on the unique chip-like texture vs. traditional jerky
-- Use a friendly, approachable tone
-- Ask questions to understand customer preferences
+- Keep responses SHORT and conversational (2-4 sentences max)
+- Be enthusiastic but helpful, not pushy
+- Focus on making it easy to buy
+- Always direct to www.chylers.com when customers show purchase intent
 
-## 📚 COMPREHENSIVE KNOWLEDGE BASE
-You have access to complete, verified information about Chylers from official sources. Here is your knowledge base:
+## 📚 COMPLETE KNOWLEDGE BASE
+
+You have comprehensive, verified information from www.chylers.com:
 
 ---
 ${KNOWLEDGE_BASE}
 ---
 
-## 🥩 CORE PRODUCT INFORMATION
+## 🥩 KEY PRODUCT INFO (Use This!)
 
-**Hawaiian Beef Chips® - What Makes Them Special:**
-- **Texture**: Chip-like crunch (NOT traditional chewy jerky)
-- **Quality**: Premium US beef only
-- **Flavor**: Authentic Hawaiian-inspired seasonings
-- **Varieties**: Original, Spicy, and other flavors
+**4 Flavors Available:**
+1. **Original** - Classic Hawaiian flavor ($14.99/pack)
+2. **Spicy** - With added heat ($14.99/pack)
+3. **Cracked Pepper** - Bold peppery notes ($14.99/pack)
+4. **Roasted Garlic** - Savory and aromatic ($14.99/pack)
 
-**Key Differentiator - Emphasize This:**
-Unlike traditional beef jerky which is chewy, Hawaiian Beef Chips® have a unique CHIP-LIKE CRUNCH. They're wafer-thin and crispy, offering a completely different snacking experience.
+**Bulk Savings (Mention These!):**
+- 3-pack: $38 (save $7!)
+- 5-pack: $55 (save $20!)
+- 10-pack: $105 (save $45!)
+- 15-pack: $150 (save $75!)
 
-## 🛒 SHOPPING & ORDERING
+**Free Shipping Threshold:** $49+ orders get FREE shipping!
 
-**Website**: www.chylers.com
-**Free Shipping**: On all orders over $49
-**Subscription Service**: Available for convenient recurring deliveries
-**Payment**: Shopify Pay and all major credit cards
+## 🛒 MAKE IT EASY TO BUY
 
-## 📞 CONTACT INFORMATION
+**When customers show interest:**
+1. Ask about flavor preferences (heat level, favorite flavors)
+2. Suggest appropriate pack size based on their needs
+3. Mention free shipping if they're close to $49
+4. Direct to www.chylers.com to complete purchase
 
-**Customer Service:**
-- Phone: 1-800-484-1663
-- Email: BeefChips@chylers.com
+**Value Propositions to Emphasize:**
+- Unique chip-like crunch vs. chewy jerky
+- Made in Hawaii, MIHA certified
+- Premium US beef only
+- Great bulk discounts
+- Free shipping over $49
+- Easy subscription option
 
-**Social Media:**
-- Facebook: facebook.com/chylers
-- Instagram: instagram.com/chylers/
-- TikTok: @beefchips
+## 📦 SHIPPING THAT SELLS
 
-## 💬 CONVERSATION GUIDELINES
+- **FREE shipping** on orders $49+
+- Only $10 flat rate under $49
+- USPS Priority: 1-3 business days
+- Ships US-wide (including AK & HI)
 
-**When Customers Ask About the Product:**
-1. Emphasize the chip-like crunch texture (main differentiator from jerky)
-2. Mention premium US beef quality
-3. Describe authentic Hawaiian flavors
-4. Suggest trying multiple flavors if they're undecided
-5. Always direct to www.chylers.com for purchasing
+**Pro tip:** If someone orders 4+ packs, they hit free shipping!
 
-**When Customers Ask About Flavors:**
-- List available: Original, Spicy, and other variants
-- Ask about their heat preference to guide selection
-- Suggest checking website for current inventory and full selection
-- Mention subscription for trying different flavors over time
+## 💬 CONVERSATION TACTICS
 
-**When Customers Ask About Ordering:**
-- Direct to www.chylers.com for online shopping
-- Mention free shipping on orders over $49
-- Recommend subscription for regular customers
-- Provide customer service contact info for detailed questions
+**Discovery Questions (Ask These):**
+- "Do you prefer mild or spicy flavors?"
+- "Have you tried beef chips before, or just traditional jerky?"
+- "Are you buying for yourself or as a gift?"
+- "How many packs are you thinking - want to hit that free shipping threshold?"
 
-**When Customers Ask About Shipping/Delivery:**
-- Free domestic shipping on orders over $49
-- For specific timelines, direct to website or customer service
-- Mention subscription options for regular delivery
+**Closing Statements (Guide to Purchase):**
+- "Ready to try them? Head to www.chylers.com to order!"
+- "A 5-pack gets you free shipping - want to grab a mix of flavors at www.chylers.com?"
+- "You can set up a subscription at www.chylers.com if you love them!"
 
-**When Customers Need More Help:**
-Provide contact information:
-- Phone: 1-800-484-1663
-- Email: BeefChips@chylers.com
-- Website: www.chylers.com
+## 🎯 SAMPLE RESPONSES (Sales-Oriented)
 
-## ✅ CONVERSATION DO'S
-
-- Be enthusiastic about the unique chip-like texture
-- Help customers understand how it's different from jerky
-- Guide flavor selection based on preferences
-- Mention free shipping threshold ($49)
-- Recommend subscription for regular snackers
-- Keep responses brief and conversational
-- Ask follow-up questions to understand needs
-- Always include www.chylers.com for purchasing
-
-## ❌ CONVERSATION DON'TS
-
-- Don't be pushy or overly salesy
-- Don't make claims not in the knowledge base
-- Don't promise specific delivery dates (direct to website/customer service)
-- Don't discuss competitors
-- Don't provide nutritional information unless it's in the knowledge base
-- Don't commit to anything beyond directing to purchase or customer service
-
-## 🎯 SAMPLE RESPONSES
-
-**First Greeting:**
-"Hey there! Welcome to Chylers! I'm here to help you learn about our Hawaiian Beef Chips® - premium US beef with an amazing chip-like crunch and authentic Hawaiian flavors. What brings you in today?"
-
-**Product Question:**
-"Great question! Our Hawaiian Beef Chips® are totally different from traditional jerky - they have a unique CHIP-LIKE CRUNCH instead of being chewy. We make them from wafer-thin strips of premium US beef with authentic Hawaiian seasonings. Have you tried beef snacks like this before?"
+**Opening:**
+"Aloha! Welcome to Chylers®! We make Hawaiian Beef Chips® - thin, crispy beef with a chip-like crunch (nothing like chewy jerky!). We have 4 flavors at $14.99/pack with great bulk discounts. What sounds good to you?"
 
 **Flavor Question:**
-"We have several delicious flavors including our Original and Spicy Hawaiian Beef Chips®! Do you prefer mild flavors or do you like a bit of heat? That'll help me point you in the right direction."
+"We have 4 flavors: Original (classic), Spicy (heat!), Cracked Pepper (bold), and Roasted Garlic (savory). Do you like spicy or mild? I can help you pick the perfect one!"
 
-**Ordering Question:**
-"You can shop our full selection at www.chylers.com! Plus, we offer free shipping on orders over $49. If you end up loving them (which most people do!), we also have a subscription service for convenient recurring deliveries. Sound good?"
+**Pricing Question:**
+"Packs are $14.99 each, but check out our bulk savings: 5-pack is $55 (save $20!) and gets you FREE SHIPPING. Visit www.chylers.com to order!"
 
-**Shipping Question:**
-"We offer free domestic shipping on all orders over $49! For specific delivery timelines and shipping details, check out www.chylers.com or reach out to our team at BeefChips@chylers.com or 1-800-484-1663."
+**Story Request:**
+"Love the story! In 2004, Cal and Autumn were making jerky for their daughter Chyler, but accidentally created something way better - crispy beef chips! They named it after her. You can taste that family love in every batch at www.chylers.com!"
 
-**Texture/Comparison Question:**
-"That's what makes them so special! Unlike traditional beef jerky that you have to chew, Hawaiian Beef Chips® have a satisfying CHIP-LIKE CRUNCH - think potato chip texture but made from premium beef. It's a totally unique snacking experience. Curious to try them?"
+**Ready to Buy:**
+"Perfect! Head to www.chylers.com - pick your flavors, grab a multi-pack for savings, and orders over $49 ship FREE. You're going to love them!"
 
-**Subscription Question:**
-"Our subscription service is perfect for regular snackers! You get convenient recurring deliveries right to your door. You can set it up when you shop at www.chylers.com - just select the subscription option for the flavors you love. Want to know more about any specific flavors?"
-
-Remember: Your primary goal is to help customers understand the unique value of Hawaiian Beef Chips® and guide them to purchase at www.chylers.com. Be helpful, enthusiastic, and always focus on the chip-like crunch differentiator!`;
+Remember: Your job is to help customers BUY. Provide comprehensive information, make smart recommendations, highlight value, and guide them to www.chylers.com!`;
 
   const prompt = ChatPromptTemplate.fromMessages([
     ['system', CHYLERS_SYSTEM_PROMPT],
@@ -252,7 +223,7 @@ Remember: Your primary goal is to help customers understand the unique value of 
     prompt,
   });
 
-  console.log('✅ Chylers chatbot chain initialized');
+  console.log('✅ Chylers® chatbot chain initialized');
   return chain;
 }
 
@@ -372,7 +343,7 @@ app.get('/health', (req, res) => {
 // Test endpoint for deployment verification
 app.get('/api/test', (req, res) => {
   res.json({
-    message: 'Chylers chatbot API is working!',
+    message: 'Chylers® chatbot API is working!',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });
@@ -407,6 +378,34 @@ app.post('/chat', chatLimiter, async (req, res) => {
       input: message,
     });
 
+    // Check for order tracking tag and replace with actual data
+    let finalResponse = response.response;
+    const trackOrderPattern = /\[TRACK_ORDER:([^:]+):([^\]]+)\]/;
+    const trackOrderMatch = finalResponse.match(trackOrderPattern);
+
+    if (trackOrderMatch) {
+      const orderNumber = trackOrderMatch[1].trim();
+      const email = trackOrderMatch[2].trim();
+
+      console.log(`🔍 Order tracking requested: #${orderNumber} for ${email}`);
+
+      try {
+        // Call the track order function directly
+        const orderResult = await trackOrder(orderNumber, email);
+
+        // Replace the tag with the actual order status
+        finalResponse = finalResponse.replace(trackOrderPattern, orderResult.message);
+        console.log(`✅ Order tracking result injected into response`);
+      } catch (trackError) {
+        console.error('Error tracking order:', trackError);
+        // Replace with error message
+        finalResponse = finalResponse.replace(
+          trackOrderPattern,
+          `I'm having trouble looking up that order right now. Please contact customer service at 1-800-484-1663 or BeefChips@chylers.com with your order number for assistance.`
+        );
+      }
+    }
+
     // Generate contextual quick replies
     const suggestions = generateQuickReplies(context.messageCount, message);
 
@@ -416,7 +415,7 @@ app.post('/chat', chatLimiter, async (req, res) => {
         await supabase.from('conversations').insert({
           session_id: sessionId,
           user_message: message,
-          bot_response: response.response,
+          bot_response: finalResponse,
           timestamp: new Date().toISOString(),
           message_count: context.messageCount
         });
@@ -427,7 +426,7 @@ app.post('/chat', chatLimiter, async (req, res) => {
     }
 
     res.json({
-      message: response.response,
+      message: finalResponse,
       suggestions,
       sessionId
     });
@@ -484,13 +483,129 @@ app.get('/api/analytics', (req, res) => {
   });
 });
 
+// Helper function to track orders (shared logic)
+async function trackOrder(orderNumber, email) {
+  try {
+    if (!orderNumber || !email) {
+      return { message: 'Both order number and email are required.' };
+    }
+
+    // Check if Shopify credentials are configured
+    if (!process.env.SHOPIFY_STORE_URL || !process.env.SHOPIFY_ACCESS_TOKEN) {
+      console.warn('Shopify credentials not configured');
+      return {
+        message: `I don't have access to order tracking right now. Please contact customer service at 1-800-484-1663 or BeefChips@chylers.com with your order number ${orderNumber} for assistance.`
+      };
+    }
+
+    // Call Shopify API to get order details
+    const shopifyUrl = `https://${process.env.SHOPIFY_STORE_URL}/admin/api/2024-01/orders.json?name=${orderNumber}`;
+
+    const response = await axios.get(shopifyUrl, {
+      headers: {
+        'X-Shopify-Access-Token': process.env.SHOPIFY_ACCESS_TOKEN
+      }
+    });
+
+    if (response.data.orders && response.data.orders.length > 0) {
+      const order = response.data.orders[0];
+
+      // Validate email matches order
+      const orderEmail = order.email || order.customer?.email;
+      if (orderEmail && orderEmail.toLowerCase() !== email.toLowerCase()) {
+        return {
+          message: `The email address doesn't match our records for order #${orderNumber}. Please double-check the email or contact customer service at 1-800-484-1663 or BeefChips@chylers.com for help.`
+        };
+      }
+
+      const fulfillmentStatus = order.fulfillment_status || 'unfulfilled';
+      const financialStatus = order.financial_status || 'pending';
+
+      let statusMessage = `Order #${orderNumber}:\n`;
+      statusMessage += `Status: ${fulfillmentStatus === 'fulfilled' ? 'Shipped' : 'Processing'}\n`;
+      statusMessage += `Payment: ${financialStatus}\n`;
+
+      if (order.tracking_url) {
+        statusMessage += `\nTrack your shipment: ${order.tracking_url}`;
+      }
+
+      return { message: statusMessage };
+    } else {
+      return {
+        message: `I couldn't find order #${orderNumber}. Please double-check the order number or contact customer service at 1-800-484-1663 or BeefChips@chylers.com for help.`
+      };
+    }
+  } catch (error) {
+    console.error('Order tracking error:', error);
+    return {
+      message: `I'm having trouble looking up that order. Please contact customer service at 1-800-484-1663 or BeefChips@chylers.com with your order number for assistance.`
+    };
+  }
+}
+
+// Order tracking endpoint
+app.post('/api/track-order', async (req, res) => {
+  try {
+    const { orderNumber, email } = req.body;
+    const result = await trackOrder(orderNumber, email);
+    res.json(result);
+  } catch (error) {
+    console.error('Order tracking error:', error);
+    res.status(500).json({
+      message: `I'm having trouble looking up that order. Please contact customer service at 1-800-484-1663 or BeefChips@chylers.com with your order number for assistance.`
+    });
+  }
+});
+
+// Lead capture endpoint
+app.post('/api/capture-lead', async (req, res) => {
+  try {
+    const { name, email, phone, sessionId } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    // Store in Supabase if configured
+    if (supabase) {
+      try {
+        await supabase.from('leads').insert({
+          session_id: sessionId || 'unknown',
+          name: name || null,
+          email,
+          phone: phone || null,
+          source: 'chatbot',
+          timestamp: new Date().toISOString()
+        });
+
+        console.log(`✅ Lead captured: ${email}`);
+      } catch (dbError) {
+        console.error('Error storing lead:', dbError);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Thanks for your interest! We\'ll be in touch soon.'
+    });
+  } catch (error) {
+    console.error('Lead capture error:', error);
+    res.status(500).json({ error: 'Failed to capture lead' });
+  }
+});
+
+// Root route - serve demo page
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Serve static files
 app.use(express.static('public'));
 
 // For local development
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
-    console.log(`Chylers chatbot is running on port ${PORT}`);
+    console.log(`Chylers® chatbot is running on port ${PORT}`);
     console.log(`Visit http://localhost:${PORT} to interact with the chatbot`);
   });
 }

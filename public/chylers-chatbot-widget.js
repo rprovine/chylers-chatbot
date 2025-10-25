@@ -98,8 +98,8 @@
         }
 
         .chylers-chat-header {
-            background: linear-gradient(135deg, #0d7377 0%, #14919d 100%);
-            color: white;
+            background: transparent;
+            color: #333;
             padding: 16px 20px;
             border-radius: 20px 20px 0 0;
             display: flex;
@@ -124,8 +124,11 @@
         }
 
         .chylers-header-logo {
-            height: 28px;
+            max-height: 32px;
+            max-width: 150px;
+            height: auto;
             width: auto;
+            object-fit: contain;
             display: block;
         }
 
@@ -136,9 +139,9 @@
         }
 
         .chylers-close-btn {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.05);
             border: none;
-            color: white;
+            color: #666;
             width: 32px;
             height: 32px;
             border-radius: 50%;
@@ -153,7 +156,8 @@
         }
 
         .chylers-close-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.1);
+            color: #333;
         }
 
         .chylers-chat-messages {
@@ -309,7 +313,7 @@
         }
 
         .chylers-quickstart {
-            padding: 16px;
+            padding: 10px;
             background: #f8f9fa;
             border-bottom: 1px solid #e9ecef;
         }
@@ -334,7 +338,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 12px;
+            padding: 10px;
             background: white;
             border: 2px solid #e9ecef;
             border-radius: 8px;
@@ -350,12 +354,12 @@
         }
 
         .chylers-quickstart-icon {
-            font-size: 20px;
+            font-size: 18px;
             margin-bottom: 4px;
         }
 
         .chylers-quickstart-label {
-            font-size: 10px;
+            font-size: 9px;
             color: #333;
             font-weight: 500;
         }
@@ -481,9 +485,17 @@
                         <div class="chylers-quickstart-icon">🌶️</div>
                         <div class="chylers-quickstart-label">Flavors</div>
                     </div>
+                    <div class="chylers-quickstart-btn" data-message="Tell me the Chylers story">
+                        <div class="chylers-quickstart-icon">❤️</div>
+                        <div class="chylers-quickstart-label">Our Story</div>
+                    </div>
                     <div class="chylers-quickstart-btn" data-message="How does shipping work?">
                         <div class="chylers-quickstart-icon">🚚</div>
                         <div class="chylers-quickstart-label">Shipping</div>
+                    </div>
+                    <div class="chylers-quickstart-btn" data-message="I need to check my order status">
+                        <div class="chylers-quickstart-icon">📦</div>
+                        <div class="chylers-quickstart-label">Order Status</div>
                     </div>
                     <div class="chylers-quickstart-btn" data-message="I want to order">
                         <div class="chylers-quickstart-icon">🛒</div>
@@ -556,6 +568,48 @@
         }
     }
 
+    // Convert markdown to HTML
+    function formatMessageText(text) {
+        // Convert headings (must come before other formatting)
+        text = text.replace(/^### (.+)$/gm, '<strong style="font-size: 1.1em; display: block; margin-top: 0.5em;">$1</strong>');
+        text = text.replace(/^## (.+)$/gm, '<strong style="font-size: 1.15em; display: block; margin-top: 0.5em;">$1</strong>');
+        text = text.replace(/^# (.+)$/gm, '<strong style="font-size: 1.2em; display: block; margin-top: 0.5em;">$1</strong>');
+
+        // Convert [text](url) links
+        text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+        // Convert **bold** to <strong>
+        text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+        // Convert *italic* to <em> (but not if it's part of a bullet point)
+        text = text.replace(/(?<!\*)\*(?!\*)([^*]+)\*(?!\*)/g, '<em>$1</em>');
+
+        // Convert `code` to <code>
+        text = text.replace(/`([^`]+)`/g, '<code style="background: rgba(0,0,0,0.05); padding: 2px 4px; border-radius: 3px; font-family: monospace; font-size: 0.9em;">$1</code>');
+
+        // Convert blockquotes (> text)
+        text = text.replace(/^&gt; (.+)$/gm, '<div style="border-left: 3px solid #d97706; padding-left: 10px; margin: 8px 0; color: #666;">$1</div>');
+        text = text.replace(/^> (.+)$/gm, '<div style="border-left: 3px solid #d97706; padding-left: 10px; margin: 8px 0; color: #666;">$1</div>');
+
+        // Convert bullet lists (- item or * item)
+        text = text.replace(/^[*-] (.+)$/gm, '<div style="margin-left: 1em;">• $1</div>');
+
+        // Convert numbered lists (1. item, 2. item, etc)
+        text = text.replace(/^\d+\. (.+)$/gm, '<div style="margin-left: 1em;">$1</div>');
+
+        // Convert horizontal rules (--- or ***)
+        text = text.replace(/^(-{3,}|\*{3,})$/gm, '<hr style="border: none; border-top: 1px solid #e5e7eb; margin: 10px 0;">');
+
+        // Convert URLs to clickable links (detect www.chylers.com or https://...)
+        text = text.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+        text = text.replace(/\b(www\.[^\s<]+)/g, '<a href="https://$1" target="_blank" rel="noopener noreferrer">$1</a>');
+
+        // Convert line breaks
+        text = text.replace(/\n/g, '<br>');
+
+        return text;
+    }
+
     // Add message
     function addMessage(text, sender, suggestions = null) {
         // Remove existing suggestions
@@ -566,7 +620,7 @@
 
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('chylers-message', `chylers-${sender}-message`);
-        messageDiv.textContent = text;
+        messageDiv.innerHTML = formatMessageText(text);
         messagesContainer.appendChild(messageDiv);
 
         // Add suggestions
@@ -643,7 +697,7 @@
             typingIndicator.classList.remove('active');
 
             if (response.ok) {
-                addMessage(data.response, 'bot', data.suggestions);
+                addMessage(data.message, 'bot', data.suggestions);
             } else {
                 addMessage('Sorry, I encountered an error. Please try again.', 'bot');
             }
