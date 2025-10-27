@@ -132,6 +132,11 @@
             margin-bottom: 40px;
         }
 
+        .comparison-table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
         .comparison-table {
             width: 100%;
             border-collapse: collapse;
@@ -318,11 +323,13 @@
 
             .comparison-table {
                 font-size: 13px;
+                min-width: 600px;
             }
 
             .comparison-table th,
             .comparison-table td {
                 padding: 12px 10px;
+                word-break: break-word;
             }
 
             .comparison-table th {
@@ -412,6 +419,7 @@
             <h2>Shopify Chat vs. Chylers AI Chatbot</h2>
             <p>See why upgrading to AI makes sense</p>
 
+            <div class="comparison-table-wrapper">
             <table class="comparison-table">
                 <thead>
                     <tr>
@@ -493,6 +501,7 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
 
         <div class="installation">
