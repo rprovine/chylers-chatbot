@@ -7,8 +7,21 @@
  */
 
 (function() {
-    // Configuration - use Vercel deployment for API calls
-    const API_BASE_URL = 'https://chylers-chatbot-qfe23gvds-rprovines-projects.vercel.app';
+    // Configuration - dynamically detect the API base URL from script source
+    // This ensures the widget always uses the correct deployment URL
+    const currentScript = document.currentScript || document.querySelector('script[src*="chylers-chatbot-widget.js"]');
+    const scriptSrc = currentScript ? currentScript.src : '';
+
+    // Extract the base URL from the script source
+    // Example: https://chylers-chatbot-xyz.vercel.app/chylers-chatbot-widget.js -> https://chylers-chatbot-xyz.vercel.app
+    let API_BASE_URL;
+    if (scriptSrc && scriptSrc.includes('vercel.app')) {
+        const url = new URL(scriptSrc);
+        API_BASE_URL = url.origin;
+    } else {
+        // Fallback for local development or custom domains
+        API_BASE_URL = 'https://chylers-chatbot-aphahph7z-rprovines-projects.vercel.app';
+    }
 
     // Prevent multiple initializations
     if (window.ChylersChatbotInitialized) {
