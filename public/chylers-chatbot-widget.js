@@ -1,6 +1,7 @@
 /**
  * Chylers AI Chatbot Widget
  * Embeddable chatbot for websites
+ * Version: 1.1.0 - iOS Mobile Optimized
  *
  * Usage: Add this script tag to your website:
  * <script src="https://chylers.com/chylers-chatbot-widget.js"></script>
