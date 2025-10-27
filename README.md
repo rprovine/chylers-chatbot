@@ -76,8 +76,33 @@ Visit http://localhost:3000
 ### 4. Deploy to Vercel
 
 ```bash
+# Automated deployment (may not always trigger)
 npm run deploy
+
+# Manual production deployment (recommended)
+vercel --prod
 ```
+
+**Important:** For critical updates, use `vercel --prod` to ensure immediate deployment. The Vercel CLI will output a new deployment URL like:
+```
+https://chylers-chatbot-[hash]-rprovines-projects.vercel.app
+```
+
+### 5. Update Shopify Widget (After Deployment)
+
+After deploying to Vercel, update the Shopify store to use the latest widget:
+
+```bash
+node update-widget-url.js
+```
+
+This script automatically:
+- Finds the current widget URL in your Shopify theme
+- Replaces it with the new deployment URL
+- Adds cache-busting version parameter
+- Confirms the update
+
+**Note:** Each Vercel deployment gets a unique URL. Update `update-widget-url.js` with the new deployment URL before running.
 
 ## API Endpoints
 
@@ -170,6 +195,7 @@ The widget automatically:
 - Captures leads during conversation
 - Supports order tracking
 - Fully responsive (desktop + mobile)
+- **iOS Optimized** - 16px input font-size prevents auto-zoom, comprehensive mobile CSS ensures proper fullscreen layout on iPhone
 
 ## Knowledge Base
 
@@ -257,9 +283,38 @@ npm install
 # Run dev server with auto-reload
 npm run dev
 
-# Deploy to production
-npm run deploy
+# Deploy to production (manual recommended)
+vercel --prod
+
+# Update Shopify after deployment
+node update-widget-url.js
 ```
+
+## Troubleshooting
+
+### iOS Mobile Issues
+
+If the widget appears cut off or requires pinch-to-zoom on iOS:
+
+1. **Check input font-size** - Must be 16px or larger to prevent iOS auto-zoom
+2. **Verify mobile CSS** - Widget should have `!important` declarations in `@media (max-width: 768px)`
+3. **Clear cache** - iOS Safari aggressively caches. Clear with Settings → Safari → Clear History and Website Data
+4. **Check deployment** - Ensure Shopify is loading the latest Vercel deployment URL with cache-busting parameter (`?v=11`)
+5. **Test in Private tab** - Bypasses cache for immediate testing
+
+**Key mobile CSS requirements:**
+- `font-size: 16px` on all input fields (prevents auto-zoom)
+- `box-sizing: border-box` on all widget elements
+- `max-width: 100%` and `overflow-x: hidden` to prevent horizontal scroll
+- `position: fixed !important` with all edges set to 0 for fullscreen mobile
+
+### Cache Issues
+
+Browsers and CDNs cache the widget JavaScript. To force updates:
+
+1. **Version parameter** - Widget URLs include `?v=11` to bust cache
+2. **New deployment** - Each Vercel deployment gets a unique URL
+3. **Shopify update** - Run `update-widget-url.js` after deploying to update production
 
 ## Support
 
