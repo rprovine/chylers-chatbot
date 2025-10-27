@@ -270,7 +270,7 @@
             padding: 12px 16px;
             border: 2px solid #e9ecef;
             border-radius: 20px;
-            font-size: 14px;
+            font-size: 16px;
             outline: none;
             transition: border-color 0.3s;
         }
