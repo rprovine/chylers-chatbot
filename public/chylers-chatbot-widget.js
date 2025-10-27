@@ -88,14 +88,22 @@
         }
 
         @media (max-width: 768px) {
+            /* Ensure widget fills viewport - use percentage units that work on both Android and iOS */
             #chylers-chat-window {
-                bottom: 0;
-                right: 0;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                border-radius: 0;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                max-width: 100% !important;
+                max-height: 100% !important;
+                border-radius: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-sizing: border-box !important;
+                overflow: hidden !important;
             }
 
             #chylers-chatbot-container {
@@ -107,6 +115,11 @@
                 width: 56px;
                 height: 56px;
                 font-size: 24px;
+            }
+
+            /* Ensure all child elements use border-box */
+            #chylers-chat-window * {
+                box-sizing: border-box;
             }
         }
 
@@ -176,11 +189,13 @@
         .chylers-chat-messages {
             flex: 1;
             overflow-y: auto;
+            overflow-x: hidden;
             padding: 20px;
             display: flex;
             flex-direction: column;
             gap: 12px;
             background: #f8f9fa;
+            max-width: 100%;
         }
 
         .chylers-message {
@@ -188,6 +203,9 @@
             padding: 12px 16px;
             border-radius: 18px;
             word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            box-sizing: border-box;
             animation: chylersMessageFadeIn 0.3s ease-in;
         }
 
@@ -263,6 +281,8 @@
             display: flex;
             gap: 10px;
             background: white;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .chylers-chat-input input {
@@ -273,6 +293,8 @@
             font-size: 16px;
             outline: none;
             transition: border-color 0.3s;
+            box-sizing: border-box;
+            min-width: 0;
         }
 
         .chylers-chat-input input:focus {
